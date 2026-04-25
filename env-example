@@ -1,0 +1,13 @@
+# ── Base de datos ──────────────────────────
+MYSQL_ROOT_PASSWORD=root_secret_2024
+MYSQL_DATABASE=wordpress_db
+MYSQL_USER=wp_user
+MYSQL_PASSWORD=wp_secret_2024
+
+# ── WordPress ──────────────────────────────
+WORDPRESS_TABLE_PREFIX=wp_
+WORDPRESS_DEBUG=false
+
+# ── Puertos ────────────────────────────────
+WP_PORT=8080
+PMA_PORT=8081
