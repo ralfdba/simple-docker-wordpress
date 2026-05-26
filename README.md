@@ -15,7 +15,7 @@ wordpress/
 ```bash
 # 1. Clonar / copiar los archivos en tu máquina
 # 2. Asegurarte de que la carpeta de plugins existe:
-#    C:\Users\rfalf\Development\code\php\plugins-wordpress
+#    C:\Users\user\Development\code\php\plugins-wordpress
 
 # 3. Levantar los servicios
 docker compose up -d
