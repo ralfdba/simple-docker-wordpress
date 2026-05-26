@@ -1,0 +1,95 @@
+services:
+
+  # ─────────────────────────────────────────
+  #  Base de datos MySQL
+  # ─────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: wordpress_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE:      ${MYSQL_DATABASE}
+      MYSQL_USER:          ${MYSQL_USER}
+      MYSQL_PASSWORD:      ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - wordpress_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  #  WordPress
+  # ─────────────────────────────────────────
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wordpress_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST:     db:3306
+      WORDPRESS_DB_NAME:     ${MYSQL_DATABASE}
+      WORDPRESS_DB_USER:     ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX:-wp_}
+      WORDPRESS_DEBUG:       ${WORDPRESS_DEBUG:-false}
+    volumes:
+      # Persistencia completa de WordPress
+      - wp_data:/var/www/html
+
+      # ⬇️  Bind mount: tus plugins locales en Windows
+      # La carpeta de tu host se monta sobre wp-content/plugins
+      - type: bind
+        source: C:\Users\user\Development\code\php\plugins-wordpress
+        target: /var/www/html/wp-content/plugins
+
+      # Opcional: monta también themes y uploads si los necesitas
+      # - type: bind
+      #   source: C:\Users\user\Development\code\php\themes-wordpress
+      #   target: /var/www/html/wp-content/themes
+    ports:
+      - "${WP_PORT:-8080}:80"
+    networks:
+      - wordpress_net
+
+  # ─────────────────────────────────────────
+  #  phpMyAdmin (opcional, comentar si no se necesita)
+  # ─────────────────────────────────────────
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: wordpress_pma
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${PMA_PORT:-8081}:80"
+    networks:
+      - wordpress_net
+
+# ─────────────────────────────────────────
+#  Volúmenes nombrados
+# ─────────────────────────────────────────
+volumes:
+  db_data:
+    driver: local
+  wp_data:
+    driver: local
+
+# ─────────────────────────────────────────
+#  Red
+# ─────────────────────────────────────────
+networks:
+  wordpress_net:
+    driver: bridge
